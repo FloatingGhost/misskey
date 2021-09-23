@@ -4,6 +4,7 @@ import Channel from '../channel';
 import { Notes } from '@/models/index';
 import { normalizeForSearch } from '@/misc/normalize-for-search';
 import { isBlockerUserRelated } from '@/misc/is-blocker-user-related';
+import { isBlockedUserRelated } from '@/misc/is-blocked-user-related';
 import { Packed } from '@/misc/schema';
 
 export default class extends Channel {
@@ -39,6 +40,7 @@ export default class extends Channel {
 		if (isMutedUserRelated(note, this.muting)) return;
 		// 流れてきたNoteがブロックされているユーザーが関わるものだったら無視する
 		if (isBlockerUserRelated(note, this.blocking)) return;
+		if (isBlockedUserRelated(note, this.blocked)) return;
 
 		this.connection.cacheNote(note);
 

@@ -25,6 +25,7 @@ export default class Connection {
 	public following: Set<User['id']> = new Set();
 	public muting: Set<User['id']> = new Set();
 	public blocking: Set<User['id']> = new Set(); // "被"blocking
+	public blocked: Set<User['id']> = new Set(); // "彼"をblocked
 	public followingChannels: Set<ChannelModel['id']> = new Set();
 	public token?: AccessToken;
 	private wsConnection: websocket.connection;
@@ -54,6 +55,7 @@ export default class Connection {
 			this.updateFollowing();
 			this.updateMuting();
 			this.updateBlocking();
+			this.updateBlocked();
 			this.updateFollowingChannels();
 			this.updateUserProfile();
 
@@ -389,6 +391,18 @@ export default class Connection {
 		});
 
 		this.blocking = new Set<string>(blockings.map(x => x.blockerId));
+	}
+
+	@autobind
+	private async updateBlocked() {
+		const blocked = await Blockings.find({
+			where: {
+				blockerId: this.user!.id
+			},
+			select: ['blockeeId']
+		});
+
+		this.blocked = new Set<string>(blocked.map(x => x.blockeeId));
 	}
 
 	@autobind

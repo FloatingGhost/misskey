@@ -3,6 +3,7 @@ import Channel from '../channel';
 import { Notes } from '@/models/index';
 import { isMutedUserRelated } from '@/misc/is-muted-user-related';
 import { isBlockerUserRelated } from '@/misc/is-blocker-user-related';
+import { isBlockedUserRelated } from '@/misc/is-blocked-user-related';
 
 export default class extends Channel {
 	public readonly chName = 'antenna';
@@ -29,6 +30,7 @@ export default class extends Channel {
 			if (isMutedUserRelated(note, this.muting)) return;
 			// 流れてきたNoteがブロックされているユーザーが関わるものだったら無視する
 			if (isBlockerUserRelated(note, this.blocking)) return;
+			if (isBlockedUserRelated(note, this.blocked)) return;
 
 			this.connection.cacheNote(note);
 
