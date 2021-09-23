@@ -7,10 +7,16 @@ export function generateBlockedUserQuery(q: SelectQueryBuilder<any>, me: { id: U
 	const blockingQuery = Blockings.createQueryBuilder('blocking')
 		.select('blocking.blockerId')
 		.where('blocking.blockeeId = :blockeeId', { blockeeId: me.id });
+	const blockerQuery = Blockings.createQueryBuilder('blocking')
+		.select('blocking.blockeeId')
+		.where('blocking.blockerId = :blockerId', { blockerId: me.id });
 
 	// 投稿の作者にブロックされていない かつ
+	// 投稿の作者をブロックしてない　かつ
 	// 投稿の返信先の作者にブロックされていない かつ
-	// 投稿の引用元の作者にブロックされていない
+	// 投稿の返信先の作者をブロックしてない　かつ
+	// 投稿の引用元の作者にブロックされていない かつ
+	// 投稿の引用元の作者ををブロックしてない
 	q
 		.andWhere(`note.userId NOT IN (${ blockingQuery.getQuery() })`)
 		.andWhere(new Brackets(qb => { qb
@@ -23,6 +29,17 @@ export function generateBlockedUserQuery(q: SelectQueryBuilder<any>, me: { id: U
 		}));
 
 	q.setParameters(blockingQuery.getParameters());
+	q
+		.andWhere(`note.userId NOT IN (${ blockerQuery.getQuery() })`)
+		.andWhere(new Brackets(qb => { qb
+			.where(`note.replyUserId IS NULL`)
+			.orWhere(`note.replyUserId NOT IN (${ blockerQuery.getQuery() })`);
+		}))
+		.andWhere(new Brackets(qb => { qb
+			.where(`note.renoteUserId IS NULL`)
+			.orWhere(`note.renoteUserId NOT IN (${ blockerQuery.getQuery() })`);
+		}));
+	q.setParameters(blockerQuery.getParameters());
 }
 
 export function generateBlockQueryForUsers(q: SelectQueryBuilder<any>, me: { id: User['id'] }) {

@@ -3,7 +3,7 @@ import { ID } from '@/misc/cafy-id';
 import { readNotification } from '../../common/read-notification';
 import define from '../../define';
 import { makePaginationQuery } from '../../common/make-pagination-query';
-import { Notifications, Followings, Mutings, Users } from '@/models/index';
+import { Notifications, Followings, Mutings, Users, Blockings } from '@/models/index';
 import { notificationTypes } from '../../../../types';
 import read from '@/services/note/read';
 
@@ -71,6 +71,10 @@ export default define(meta, async (ps, user) => {
 		.select('following.followeeId')
 		.where('following.followerId = :followerId', { followerId: user.id });
 
+	const blockingQuery = Blockings.createQueryBuilder('blocking')
+		.select('blocking.blockeeId')
+		.where('blocking.blockerId = :blockerId', { blockerId: user.id });
+
 	const mutingQuery = Mutings.createQueryBuilder('muting')
 		.select('muting.muteeId')
 		.where('muting.muterId = :muterId', { muterId: user.id });
@@ -93,6 +97,8 @@ export default define(meta, async (ps, user) => {
 	query.setParameters(mutingQuery.getParameters());
 
 	query.andWhere(`notification.notifierId NOT IN (${ suspendedQuery.getQuery() })`);
+	query.andWhere(`notification.notifierId NOT IN (${ blockingQuery.getQuery() })`);
+	query.setParameters(blockingQuery.getParameters());
 
 	if (ps.following) {
 		query.andWhere(`((notification.notifierId IN (${ followingQuery.getQuery() })) OR (notification.notifierId = :meId))`, { meId: user.id });
