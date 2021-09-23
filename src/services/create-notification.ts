@@ -1,6 +1,6 @@
 import { publishMainStream } from '@/services/stream';
 import pushSw from './push-notification';
-import { Notifications, Mutings, UserProfiles, Users } from '@/models/index';
+import { Notifications, Mutings, UserProfiles, Users, Blockings } from '@/models/index';
 import { genId } from '@/misc/gen-id';
 import { User } from '@/models/entities/user';
 import { Notification } from '@/models/entities/notification';
@@ -16,6 +16,12 @@ export async function createNotification(
 	}
 
 	const profile = await UserProfiles.findOne({ userId: notifieeId });
+	const block = await Blockings.findOne({
+		blockeeId: data.notifierId,
+		blockerId: notifieeId
+	});
+
+	if (block) return;
 
 	const isMuted = profile?.mutingNotificationTypes.includes(type);
 
