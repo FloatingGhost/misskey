@@ -73,7 +73,7 @@ export class NoteRepository extends Repository<Note> {
             blockerId: meId,
             blockeeId: packedNote.userId
         });
-        if (block) return false;
+        if (block) return true;
 
 		// visibility が specified かつ自分が指定されていなかったら非表示
 		if (packedNote.visibility === 'specified') {
