@@ -2,7 +2,7 @@ import { EntityRepository, Repository, In } from 'typeorm';
 import * as mfm from 'mfm-js';
 import { Note } from '@/models/entities/note';
 import { User } from '@/models/entities/user';
-import { Users, PollVotes, DriveFiles, NoteReactions, Followings, Polls, Channels } from '../index';
+import { Users, PollVotes, DriveFiles, NoteReactions, Followings, Polls, Channels, Blockings } from '../index';
 import { Packed } from '@/misc/schema';
 import { nyaize } from '@/misc/nyaize';
 import { awaitAll } from '@/prelude/await-all';
@@ -68,6 +68,12 @@ export class NoteRepository extends Repository<Note> {
 	private async hideNote(packedNote: Packed<'Note'>, meId: User['id'] | null) {
 		// TODO: isVisibleForMe を使うようにしても良さそう(型違うけど)
 		let hide = false;
+
+        const block = await Blockings.findOne({
+            blockerId: meId,
+            blockeeId: packedNote.userId
+        });
+        if (block) return false;
 
 		// visibility が specified かつ自分が指定されていなかったら非表示
 		if (packedNote.visibility === 'specified') {
